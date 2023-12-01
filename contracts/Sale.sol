@@ -8,8 +8,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract SimpleSale is Ownable {
     IERC20 public token;  // ERC20 token being sold
     uint256 public rate = 0.01 ether;  // Rate of tokens in wei (e.g., 1 token = 0.01 ETH)
-    uint256 public lockPeriod = 31536000 ;  //365 days in seconds 
-    uint256 public totalSold
+    uint256 public lockPeriod = 365 days ;  //365 days in seconds 
+    uint256 public totalSold;
+    bool saleOn = false;
     
 
     mapping(address => uint256) public purchasedTokens;
@@ -24,7 +25,7 @@ contract SimpleSale is Ownable {
     }
 
     function startSale() external onlyOwner {
-        token.approve(address(this),token.balanceOf(msg.sender))
+        token.approve(address(this),token.balanceOf(msg.sender));
         token.transferFrom(msg.sender, address(this),token.balanceOf(msg.sender));
     }
 
@@ -50,7 +51,7 @@ contract SimpleSale is Ownable {
 
     function endSale() external onlyOwner {
         token.approve(address(this),token.balanceOf(address(this)));
-        token.transferFrom(address(this),msg.sender,token.balanceOf(address(this))-totalSold);
+        token.transferFrom(address(this),msg.sender,token.balanceOf(address(this))-(totalSold ether));
     }
 
     // Function to withdraw ETH from the contract
