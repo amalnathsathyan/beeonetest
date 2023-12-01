@@ -9,14 +9,26 @@ const hre = require("hardhat");
 
 async function main() {
 
+  const erc20 = await hre.ethers.deployContract("BEE");
 
-  const lock = await hre.ethers.deployContract("BEE");
+  await erc20.waitForDeployment();
 
-  const Lock = await lock.waitForDeployment();
+  const tokenAddress = await erc20.getAddress();
 
   console.log(
-    `BEE Token Deployed To :${await lock.getAddress()}`
+    `BEE Token Deployed To :${tokenAddress}`
   );
+
+  const sale = await hre.ethers.deployContract("SimpleSale",[tokenAddress]);
+
+  await sale.waitForDeployment();
+
+  const saleAddress = await sale.getAddress();
+
+  console.log(
+    `Sale Contract Deployed To :${saleAddress}`
+  );
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

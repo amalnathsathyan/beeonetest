@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-solhint");
+require("@nomicfoundation/hardhat-verify");
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -32,5 +33,8 @@ module.exports = {
     },
   mocha:{
     timeout:600000
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
   }
   }
