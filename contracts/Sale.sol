@@ -8,43 +8,48 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract TokenSale is Ownable {
     IERC20 public token;  // ERC20 token being sold
     uint256 public rate;  // Rate of tokens in wei (e.g., 1 token = 0.01 ETH)
-    uint256 public releaseTime;  // Timestamp when tokens can be released
+    uint256 public lockPeriod = 31536000 ;  //365 days in seconds 
+    
 
     mapping(address => uint256) public purchasedTokens;
+    mapping(address => uint256) public lockExpiration;
 
     event TokensPurchased(address indexed buyer, uint256 amount, uint256 cost);
 
     constructor(
         address _tokenAddress,
         uint256 _rate,
-        uint256 _lockPeriod // Amount of lock period in seconds
     ) Ownable(msg.sender) {
         token = IERC20(_tokenAddress);
         rate = _rate;
-        releaseTime = block.timestamp + _lockPeriod; // One Year
+    }
+
+    function startSale() external onlyOwner {
+        token.transferFrom(msg.sender, address(this),token.balanceOf(msg.sender))
     }
 
     function purchaseTokens(uint256 _tokenAmount) external payable {
         
-        require(block.timestamp < releaseTime, "Tokens can only be purchased before release time");
-        
-        uint256 cost = _tokenAmount * rate;
-        require(msg.value >= cost, "Insufficient funds");
-
+        require(msg.value == _tokenAmount * rate, "Incorrect Ether amount");
+        uint256 userLockPeriod = block.timestamp + lockPeriod;
+        lockExpiration[msg.sender] = userLockPeriod;
         purchasedTokens[msg.sender] += _tokenAmount;
-        emit TokensPurchased(msg.sender, _tokenAmount, cost);
+        emit TokensPurchased(msg.sender, _tokenAmount,  _tokenAmount * rate);
     }
 
-    function releaseTokens() external onlyOwner {
-        require(block.timestamp >= releaseTime, "Tokens cannot be released before release time");
+    function withdrawUnlockedTokens() external {
 
-        for (uint256 i = 0; i < msg.sender.balance; i++) {
-            uint256 tokenAmount = purchasedTokens[msg.sender];
-            require(tokenAmount > 0, "No tokens to release");
+        require(block.timestamp >= lockExpiration[msg.sender], "Tokens are still locked");
+        uint256 amountToBeUnlocked = purchasedTokens[msg.sender];
+        purchasedTokens[msg.sender] = 0; // Reset the purchased amount
+        lockExpiration[msg.sender] = 0; // Reset the lock expiration
+        token.approve(address(this),unlockedAmount);
+        token.token.transferFrom(address(this),msg.sender,amountToBeUnlocked);
+    }
 
-            purchasedTokens[msg.sender] = 0;
-            token.transfer(msg.sender, tokenAmount);
-        }
+    function endSale() external onlyOwner {
+        token.approve(address(this),token.balanceOf(address(this)));
+        token.transferFrom(address(this),msg.sender,token.balanceOf(address(this)))
     }
 
     // Function to withdraw ETH from the contract
