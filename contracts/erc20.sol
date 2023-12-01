@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 contract BEE is ERC20, Ownable, ERC20Permit {
     constructor()
         ERC20("BEE", "BEE")
-        Ownable(0x798335601DFb16ef0f527B94891aCd1655Ff6Dd3)
+        Ownable(msg.sender)
         ERC20Permit("BEE")
     {
         _mint(msg.sender, 21000000 * 10 ** decimals());
